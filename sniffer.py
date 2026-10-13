@@ -3,8 +3,9 @@ import time
 
 WINDOW = 10
 THRESHOLD = 15
+COOLDOWN = 30
 seen = {}
-alerted = set()
+alerted = {}
 
 
 def handle(pkt):
@@ -24,9 +25,10 @@ def handle(pkt):
             if now - t <= WINDOW:
                 fresh[p] = t
             seen[ip] = fresh
-        if len(seen[ip]) > THRESHOLD  and ip not in alerted:
+        last = alerted.get(ip)
+        if len(seen[ip]) > THRESHOLD and (last is None or now - last > COOLDOWN):
             print("ALERT: possible port scan from", ip,"-",  len(seen[ip]), "different ports")
-            alerted.add(ip)
+            alerted[ip] = now
     
     
 sniff(prn=handle, store=False, iface="lo")
